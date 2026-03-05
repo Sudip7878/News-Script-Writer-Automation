@@ -1,0 +1,11 @@
+.env
+__pycache__/
+.pytest_cache/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
+.agents/
+.gemini/
+/tmp/
+inspect_results.txt
+inspect_news.py
