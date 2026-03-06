@@ -29,40 +29,47 @@ class AgentB_ScriptWriter:
     def generate_script(self, nepal_news, intl_news):
         # Get current English date
         now = datetime.now()
-        english_date = now.strftime("%Y-%m-%d") # e.g. 2026-03-05
+        english_date = now.strftime("%Y-%m-%d")
+        
+        # Get dynamic Nepali date
+        nepali_date = mcp_tools.fetch_nepali_date_google()
         
         # Format nepal news for prompt
         nepal_context = ""
         for item in nepal_news:
-            nepal_context += f"Headline: {item['headline']}\nContent: {item['content']}\nSource: {item['source']}\n\n"
+            nepal_context += f"Headline: {item['headline']}\nContent: {item['content']}\n\n"
         
-        # Format intl news for prompt
-        intl_context = "\n".join(intl_news)
+        # Format intl news for prompt (headline + content)
+        intl_context = ""
+        for item in intl_news:
+            intl_context += f"Headline: {item['headline']}\nContent: {item['content']}\n\n"
         
         prompt = f"""
         You are the collective voice of "SA News Nepal". 
         Write a VIRAL, ENGAGING, and AUTHORITATIVE news script in NEPALI language.
         
         Starting Format:
-        "SA News Nepal मा स्वागत छ। आजको मिति {english_date} (AD) र तदनुसार २०८२ फागुन २१ (BS) हो। आजको मुख्य समाचारबाट सुरु गरौं।"
+        "SA News Nepal मा स्वागत छ। आजको मिति {english_date} (AD) र तदनुसार {nepali_date} (हो। आजको मुख्य समाचारबाट सुरु गरौं।"
 
         PART 1: NEPAL NEWS (Detailed Summarization):
-        For each news item provided below, write a catchy headline and then summarize its RESPECTIVE content in 2-3 high-energy sentences.
+        For each Nepal news item, write a catchy headline and summarize its RESPECTIVE content in 2-3 high-energy sentences.
         
         Input Data:
         {nepal_context}
         
-        PART 2: INTERNATIONAL NEWS (Quick highlights):
+        PART 2: INTERNATIONAL NEWS (Detailed Summarization):
+        For each International news item, write a catchy headline and summarize its RESPECTIVE content in 1-2 high-energy sentences.
+        
+        Input Data:
         {intl_context}
         
         Requirements:
-        1. Maintain the exact pair: Use the headline provided and summarize ONLY the content that came with that specific headline. DO NOT mix stories.
-        2. The script MUST be entirely in NEPALI (Unicode) after the intro.
-        3. Speak on behalf of the WHOLE "SA News Nepal" team - do NOT include any person names.
-        4. Use a high-energy, dramatic tone.
-        5. Transition smoothly between the Nepal stories and the International segment.
-        6. Place the International News highlights in the LAST TWO sections of the script.
-        7. End with a professional "SA News Nepal" sign-off.
+        1. Maintain EXACT PAIRS: Only summarize the content provided for each specific headline.
+        2. Strict Language: The entire script MUST be in NEPALI (Unicode) after the intro.
+        3. Branding: Speak as the WHOLE "SA News Nepal" - no person names.
+        4. Flow: Transition smoothly between segments.
+        5. Tone: High-energy and professional.
+        6. Sign-off: Professional SA News Nepal closing.
         """
         
         try:

@@ -5,11 +5,27 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def fetch_nepali_date_google():
+    """
+    Fetches the current Nepali date (B.S.).
+    """
+    try:
+        # Using ashesh.com.np as a stable source for the current Nepali date
+        url = "https://www.ashesh.com.np/nepali-calendar/embed.php"
+        r = requests.get(url, timeout=5)
+        import re
+        # Look for pattern like 2082 Falgun 22
+        match = re.search(r'(\d{4}) ([\u0900-\u097F]+) (\d{1,2})', r.text)
+        if match:
+            year, month, day = match.groups()
+            return f"{year} {month} {day}"
+    except Exception as e:
+        print(f"Error fetching Nepali date: {e}")
+    
+    # Fallback to the date found during research if scraper fails
+    return "२०८२ फागुन २२"
+
 def fetch_nepal_news():
-    """
-    Gathers news headlines and content summaries from multiple renowned Nepal news sites.
-    Ensures no duplicate headlines and correct matching of content.
-    """
     sources = [
         {"name": "OnlineKhabar", "url": "https://www.onlinekhabar.com/", "item_selector": "h2", "content_selector": "p"},
         {"name": "Ratopati", "url": "https://ratopati.com/", "item_selector": "h2", "content_selector": ".title-description"},
@@ -22,105 +38,91 @@ def fetch_nepal_news():
     for source in sources:
         try:
             print(f"Scraping {source['name']}...")
-            response = requests.get(source['url'], headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
+            # Real-world User-Agent is less likely to be blocked
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
+            response = requests.get(source['url'], headers=headers, timeout=10)
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            # Find all potential headline items
             items = soup.find_all(source['item_selector'], limit=20)
             
             for item in items:
                 headline = item.get_text(strip=True)
                 
-                # Filter out short text or section headers
-                if not headline or len(headline) < 25 or headline in seen_headlines:
+                # Validation
+                if not headline or len(headline) < 20 or headline in seen_headlines:
                     continue
                 
-                # Avoid known section titles
+                # Filter navigation/section titles
                 if any(x in headline for x in ["ट्रेन्डिङ", "मुख्य समाचार", "ताजा अपडेट", "प्रदेश समाचार"]):
                     continue
                 
                 content = ""
-                # Strategy 1: Check immediately next sibling
-                candidate = item.find_next_sibling(source['content_selector'])
-                if candidate:
-                    content = candidate.get_text(strip=True)
-                
-                # Strategy 2: Check inside common parent
-                if not content:
-                    parent = item.parent
-                    # For sites like Ratopati where h2 might be wrapped in <a>
-                    if parent.name == 'a':
-                        parent = parent.parent
-                    
-                    candidate = parent.find(source['content_selector'])
-                    if candidate and candidate.get_text(strip=True) != headline:
-                        content = candidate.get_text(strip=True)
+                # Strategy: Search in the container (parent) rather than just siblings
+                # This is more robust for modern news grids
+                container = item.find_parent(['div', 'article', 'section'])
+                if container:
+                    content_tag = container.find(source['content_selector'])
+                    if content_tag and content_tag.get_text(strip=True) != headline:
+                        content = content_tag.get_text(strip=True)
 
-                # Strategy 3: Check grandparent if headline is in a title-div
-                if not content and item.parent.parent:
-                    gp = item.parent.parent
-                    candidate = gp.find(source['content_selector'])
-                    if candidate and candidate.get_text(strip=True) != headline:
-                        content = candidate.get_text(strip=True)
-                
-                # If still no content found, skip or use a truncated headline as fallback
-                # but only if it's likely an article.
-                if not content:
+                # Final validation: If no content, skip to keep the feed high quality
+                if not content or len(content) < 10:
                     continue
-                
-                # Basic cleaning
-                content = content[:300] # Limit summary length
                 
                 news_items.append({
                     "headline": headline,
-                    "content": content,
+                    "content": content[:300],
                     "source": source['name']
                 })
                 seen_headlines.add(headline)
                 
-                if len(news_items) >= 15: # Stop if we have enough
-                    break
+                if len(news_items) >= 15: break
                     
         except Exception as e:
             print(f"Error fetching from {source['name']}: {e}")
-
-    # Fallback if all scrapers fail
-    if not news_items:
-        return [{
-            "headline": "नेपालको अर्थतन्त्रमा सुधारका संकेत",
-            "content": "नेपाल राष्ट्र बैंकका अनुसार पछिल्लो समय विदेशी मुद्रा सञ्चिति बढेको र अर्थतन्त्र बिस्तारै लयमा फर्कन थालेको छ।",
-            "source": "Fallback"
-        }]
             
     return news_items[:12]
 
 def fetch_international_news():
-    """
-    Fetches top international news headlines.
-    """
-    # Using OnlineKhabar International section or a global one
-    url = "https://english.onlinekhabar.com/category/world"
+    url = "https://www.bbc.com/news/world"
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
+    
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        headlines = []
-        for h2 in soup.find_all('h2', limit=5):
-            text = h2.get_text(strip=True)
-            if text and len(text) > 20:
-                headlines.append(text)
-        
-        if not headlines:
-            return ["World leaders meet for climate summit", "New technology breakthrough in renewable energy"]
-        return headlines
-    except:
-        return ["Global economic shifts observed in major markets", "Advancements in aerospace technology reported"]
+        international_items = []
+        # BBC uses "promo" for standard news cards
+        promos = soup.find_all(['div', 'section'], {'data-testid': 'promo'}, limit=15)
+
+        for promo in promos:
+            headline_tag = promo.find(['h2', 'h3'])
+            summary_tag = promo.find('p')
+            
+            if headline_tag and summary_tag:
+                h_text = headline_tag.get_text(strip=True)
+                s_text = summary_tag.get_text(strip=True)
+                
+                if len(h_text) > 15 and len(s_text) > 20:
+                    international_items.append({
+                        "headline": h_text,
+                        "content": s_text[:250],
+                        "source": "BBC News"
+                    })
+
+        return international_items
+
+    except Exception as e:
+        print(f"BBC Scraping failed: {e}")
+        return [] # Smooth execution: return empty list on fail
 
 if __name__ == "__main__":
-    # Test tools
     print("--- Nepal News ---")
-    print(fetch_nepal_news())
+    nepal = fetch_nepal_news()
+    for n in nepal: print(f"[{n['source']}] {n['headline']}")
+    
     print("\n--- International News ---")
-    print(fetch_international_news())
+    intl = fetch_international_news()
+    for i in intl: print(f"[{i['source']}] {i['headline']}")

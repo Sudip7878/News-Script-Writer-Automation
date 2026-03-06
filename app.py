@@ -94,8 +94,10 @@ if st.session_state.script:
                     st.write(f"**📝 Raw Content:** {item['content']}")
         
         with tabs[1]:
-            for h in st.session_state.intl_news:
-                st.markdown(f"- {h}")
+            for item in st.session_state.intl_news:
+                with st.expander(f"Headline: {item['headline']}"):
+                    st.write(f"**📍 Source:** {item['source']}")
+                    st.write(f"**📝 Raw Content:** {item['content']}")
         
         with tabs[2]:
             st.markdown("### SA News Nepal - Catchy Script")
