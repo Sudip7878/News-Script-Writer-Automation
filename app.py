@@ -94,10 +94,13 @@ if st.session_state.script:
                     st.write(f"**📝 Raw Content:** {item['content']}")
         
         with tabs[1]:
-            for item in st.session_state.intl_news:
-                with st.expander(f"Headline: {item['headline']}"):
-                    st.write(f"**📍 Source:** {item['source']}")
-                    st.write(f"**📝 Raw Content:** {item['content']}")
+            if st.session_state.intl_news:
+                for item in st.session_state.intl_news:
+                    with st.expander(f"Headline: {item['headline']}"):
+                        st.write(f"**📍 Source:** {item['source']}")
+                        st.write(f"**📝 Raw Content:** {item['content']}")
+            else:
+                st.info("No international news collected for today.")
         
         with tabs[2]:
             st.markdown("### SA News Nepal - Catchy Script")

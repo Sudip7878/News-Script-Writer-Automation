@@ -158,14 +158,7 @@ def fetch_international_news():
         except Exception as e:
             print(f"AP News Scraping failed: {e}")
 
-    # Final Fallback
-    if not international_items:
-        return [{
-            "headline": "Global Geopolitical Tensions Rise",
-            "content": "International leaders are calling for de-escalation as conflicts in multiple regions continue to impact global stability and markets.",
-            "source": "Fallback"
-        }]
-
+    # Final return
     return international_items[:5]
 
 if __name__ == "__main__":

@@ -44,12 +44,25 @@ class AgentB_ScriptWriter:
         for item in intl_news:
             intl_context += f"Headline: {item['headline']}\nContent: {item['content']}\n\n"
         
+        # Handle empty international news
+        intl_section = ""
+        if intl_news:
+            intl_section = f"""
+        PART 2: INTERNATIONAL NEWS (Detailed Summarization):
+        For each International news item, write a catchy headline and summarize its RESPECTIVE content in 1-2 high-energy sentences.
+        
+        Input Data:
+        {intl_context}
+            """
+        else:
+            intl_section = "\n(Skip the International News section as no data is available today.)\n"
+
         prompt = f"""
         You are the collective voice of "SA News Nepal". 
         Write a VIRAL, ENGAGING, and AUTHORITATIVE news script in NEPALI language.
         
         Starting Format:
-        "SA News Nepal मा स्वागत छ। आजको मिति {english_date} (AD) र तदनुसार {nepali_date} (हो। आजको मुख्य समाचारबाट सुरु गरौं।"
+        "SA News Nepal मा स्वागत छ। आजको मिति {english_date} (AD) र तदनुसार {nepali_date} (BS) हो। आजको मुख्य समाचारबाट सुरु गरौं।"
 
         PART 1: NEPAL NEWS (Detailed Summarization):
         For each Nepal news item, write a catchy headline and summarize its RESPECTIVE content in 2-3 high-energy sentences.
@@ -57,11 +70,7 @@ class AgentB_ScriptWriter:
         Input Data:
         {nepal_context}
         
-        PART 2: INTERNATIONAL NEWS (Detailed Summarization):
-        For each International news item, write a catchy headline and summarize its RESPECTIVE content in 1-2 high-energy sentences.
-        
-        Input Data:
-        {intl_context}
+        {intl_section}
         
         Requirements:
         1. Maintain EXACT PAIRS: Only summarize the content provided for each specific headline.
