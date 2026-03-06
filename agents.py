@@ -48,7 +48,7 @@ class AgentB_ScriptWriter:
         intl_section = ""
         if intl_news:
             intl_section = f"""
-        PART 2: INTERNATIONAL NEWS (Detailed Summarization):
+        INTERNATIONAL NEWS
         For each International news item, write a catchy headline and summarize its RESPECTIVE content in 1-2 high-energy sentences.
         
         Input Data:
@@ -64,7 +64,7 @@ class AgentB_ScriptWriter:
         Starting Format:
         "SA News Nepal मा स्वागत छ। आजको मिति {english_date} (AD) र तदनुसार {nepali_date} (BS) हो। आजको मुख्य समाचारबाट सुरु गरौं।"
 
-        PART 1: NEPAL NEWS (Detailed Summarization):
+        
         For each Nepal news item, write a catchy headline and summarize its RESPECTIVE content in 2-3 high-energy sentences.
         
         Input Data:
