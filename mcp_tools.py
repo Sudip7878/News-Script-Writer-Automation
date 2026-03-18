@@ -7,22 +7,23 @@ load_dotenv()
 
 def fetch_nepali_date_google():
     """
-    Fetches the current Nepali date (B.S.).
+    Fetches the exact current Nepali date (B.S.) using nepali_datetime.
     """
     try:
-        # Using ashesh.com.np as a stable source for the current Nepali date
-        url = "https://www.ashesh.com.np/nepali-calendar/embed.php"
-        r = requests.get(url, timeout=5)
-        import re
-        # Look for pattern like 2082 Falgun 22
-        match = re.search(r'(\d{4}) ([\u0900-\u097F]+) (\d{1,2})', r.text)
-        if match:
-            year, month, day = match.groups()
-            return f"{year} {month} {day}"
-    except Exception as e:
-        print(f"Error fetching Nepali date: {e}")
-    
-    # Fallback to the date found during research if scraper fails
+        import nepali_datetime
+        # %K = year, %n = month name, %D = day
+        return nepali_datetime.date.today().strftime('%K %n %D')
+    except ImportError:
+        try:
+            import subprocess
+            import sys
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "nepali-datetime"])
+            import nepali_datetime
+            return nepali_datetime.date.today().strftime('%K %n %D')
+        except Exception as e:
+            print(f"Error fetching Nepali date: {e}")
+            
+    # Fallback
     return "२०८२ फागुन २२"
 
 def fetch_nepal_news():
@@ -86,61 +87,57 @@ def fetch_nepal_news():
 
 def fetch_international_news():
     """
-    Gathers top international headlines and content summaries.
-    Tries BBC World News first, then AP News as a backup.
+    Gathers exactly 4 international headlines and content summaries.
+    Uses BBC RSS feed for guaranteed structured data, then falls back to AP.
     """
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
     international_items = []
 
-    # --- Attempt 1: BBC World News ---
+    # --- Attempt 1: BBC World News RSS ---
     try:
-        print("Scraping BBC International News...")
-        url_bbc = "https://www.bbc.com/news/world"
+        print("Scraping BBC International News via RSS...")
+        import xml.etree.ElementTree as ET
+        url_bbc = "http://feeds.bbci.co.uk/news/world/rss.xml"
         response = requests.get(url_bbc, headers=headers, timeout=10)
         response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'html.parser')
+        root = ET.fromstring(response.content)
         
-        # BBC structure: headlines are usually h2 or h3. 
-        # Often summaries appear as a sibling or in a nearby p tag.
-        # We look for containers that likely hold a story.
-        containers = soup.find_all(['div', 'section'], limit=30)
-        for container in containers:
-            headline_tag = container.find(['h2', 'h3'])
-            summary_tag = container.find('p')
+        items = root.findall('.//item')
+        for item in items:
+            title = item.find('title')
+            desc = item.find('description')
             
-            if headline_tag and summary_tag:
-                h_text = headline_tag.get_text(strip=True)
-                s_text = summary_tag.get_text(strip=True)
+            if title is not None and desc is not None:
+                h_text = title.text.strip()
+                s_text = desc.text.strip()
                 
-                # Deduplicate and validate
-                if len(h_text) > 20 and len(s_text) > 30:
-                    if not any(item['headline'] == h_text for item in international_items):
+                # Check lengths to ensure quality
+                if len(h_text) > 10 and len(s_text) > 20:
+                    if not any(i['headline'] == h_text for i in international_items):
                         international_items.append({
                             "headline": h_text,
                             "content": s_text[:300],
                             "source": "BBC News"
                         })
-            if len(international_items) >= 5: break
+            if len(international_items) >= 4:
+                break
 
     except Exception as e:
-        print(f"BBC Scraping failed: {e}")
+        print(f"BBC RSS Scraping failed: {e}")
 
-    # --- Attempt 2: AP News (Backup) ---
-    if not international_items:
+    # --- Attempt 2: AP News (Backup to fill quota) ---
+    if len(international_items) < 4:
         try:
-            print("BBC failed, attempting AP News...")
+            print("Fetching additional stories from AP News...")
             url_ap = "https://apnews.com/hub/world-news"
             response = requests.get(url_ap, headers=headers, timeout=10)
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            # AP News often uses <h3> for headlines in their hub pages
-            # and a descriptive text or the first paragraph nearby.
-            # In their markdown version, it's often [Headline](URL) + Text
-            articles = soup.find_all(['div', 'article'], limit=20)
+            import re
+            articles = soup.find_all(['div', 'article'], limit=30)
             for article in articles:
                 headline_tag = article.find(['h1', 'h2', 'h3', 'span'], {"class": re.compile(r'headline', re.I)}) or article.find(['h1', 'h2', 'h3'])
-                # AP summaries are sometimes in a div with a specific class or just after the headline
                 summary_tag = article.find(['p', 'div'], {"class": re.compile(r'content|body|description', re.I)}) or article.find('p')
                 
                 if headline_tag and summary_tag:
@@ -154,12 +151,13 @@ def fetch_international_news():
                                 "content": s_text[:300],
                                 "source": "AP News"
                             })
-                if len(international_items) >= 5: break
+                if len(international_items) >= 4:
+                    break
         except Exception as e:
             print(f"AP News Scraping failed: {e}")
 
-    # Final return
-    return international_items[:5]
+    # Final return of exactly 4 items (or however many we got up to 4)
+    return international_items[:4]
 
 if __name__ == "__main__":
     print("--- Nepal News ---")
