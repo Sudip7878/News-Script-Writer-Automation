@@ -48,24 +48,24 @@ class AgentB_ScriptWriter:
         intl_section = ""
         if intl_news:
             intl_section = f"""
-        INTERNATIONAL NEWS
-        For each International news item, write a catchy headline and summarize its RESPECTIVE content in 1-2 high-energy sentences.
+        अन्तर्राष्ट्रिय समाचार (INTERNATIONAL NEWS):
+        तलका अन्तर्राष्ट्रिय समाचारहरूका लागि, अंग्रेजी शीर्षकलाई नेपालीमा अनुवाद गर्नुहोस् र सामग्री सारांश 1-2 वाक्यमा लेख्नुहोस्।
         
         Input Data:
         {intl_context}
             """
         else:
-            intl_section = "\n(Skip the International News section as no data is available today.)\n"
+            intl_section = "\n(अन्तर्राष्ट्रिय समाचार उपलब्ध नभएकाले यो खण्ड छोड्नुहोस्।)\n"
 
         prompt = f"""
         You are the collective voice of "SA News Nepal". 
-        Write a VIRAL, ENGAGING, and AUTHORITATIVE news script in NEPALI language.
+        Write a VIRAL, ENGAGING, and AUTHORITATIVE news script ENTIRELY in the NEPALI language.
         
         Starting Format:
         "SA News Nepal मा स्वागत छ। आजको मिति {english_date} (AD) र तदनुसार {nepali_date} (BS) हो। आजको मुख्य समाचारबाट सुरु गरौं।"
 
         
-        For each Nepal news item, write a catchy headline and summarize its RESPECTIVE content in 2-3 high-energy sentences.
+        For each Nepal news item, write a catchy Nepali headline and summarize its RESPECTIVE content in 2-3 high-energy sentences.
         
         Input Data:
         {nepal_context}
@@ -73,9 +73,9 @@ class AgentB_ScriptWriter:
         {intl_section}
         
         Instructions:
-        1. Summarize EVERY single Nepal news item provided below. Write the headline, then 2 sentences of summary.
-        2. Summarize EVERY single International news item provided below. Write the headline, then 1-2 sentences of summary.
-        3. Write the ENTIRE script in NEPALI (Unicode).
+        1. Summarize EVERY single Nepal news item provided below. Write the headline in Nepali, then 2 sentences of summary in Nepali.
+        2. Summarize EVERY single International news item provided below. TRANSLATE the English headline to Nepali first, then write 1-2 sentences of summary in Nepali.
+        3. Write the ENTIRE script in NEPALI only. Do NOT leave any headline or sentence in English.
         4. Speak as the "SA News Nepal" team.
         5. CRITICAL: You MUST end the script with this exact professional closing statement: "हवस् त, आजको लागि SA News Nepal बाट यति नै, नमस्कार!"
         """
