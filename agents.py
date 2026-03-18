@@ -72,13 +72,12 @@ class AgentB_ScriptWriter:
         
         {intl_section}
         
-        Requirements:
-        1. Maintain EXACT PAIRS: Only summarize the content provided for each specific headline.
-        2. Strict Language: The entire script MUST be in NEPALI (Unicode) after the intro.
-        3. Branding: Speak as the WHOLE "SA News Nepal" - no person names.
-        4. Flow: Transition smoothly between segments.
-        5. Tone: High-energy and professional.
-        6. Sign-off: Professional SA News Nepal closing.
+        Instructions:
+        1. Summarize EVERY single Nepal news item provided below. Write the headline, then 2 sentences of summary.
+        2. Summarize EVERY single International news item provided below. Write the headline, then 1-2 sentences of summary.
+        3. Write the ENTIRE script in NEPALI (Unicode).
+        4. Speak as the "SA News Nepal" team.
+        5. CRITICAL: You MUST end the script with this exact professional closing statement: "हवस् त, आजको लागि SA News Nepal बाट यति नै, नमस्कार!"
         """
         
         try:
@@ -89,7 +88,7 @@ class AgentB_ScriptWriter:
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.7,
-                max_tokens=2048,
+                max_tokens=8000,
             )
             return completion.choices[0].message.content
         except Exception as e:

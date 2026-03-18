@@ -87,7 +87,7 @@ def fetch_nepal_news():
 
 def fetch_international_news():
     """
-    Gathers exactly 4 international headlines and content summaries.
+    Gathers exactly 2 international headlines and content summaries.
     Uses BBC RSS feed for guaranteed structured data, then falls back to AP.
     """
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
@@ -119,19 +119,20 @@ def fetch_international_news():
                             "content": s_text[:300],
                             "source": "BBC News"
                         })
-            if len(international_items) >= 4:
+            if len(international_items) >= 2:
                 break
 
     except Exception as e:
         print(f"BBC RSS Scraping failed: {e}")
 
     # --- Attempt 2: AP News (Backup to fill quota) ---
-    if len(international_items) < 4:
+    if len(international_items) < 2:
         try:
             print("Fetching additional stories from AP News...")
             url_ap = "https://apnews.com/hub/world-news"
             response = requests.get(url_ap, headers=headers, timeout=10)
             response.raise_for_status()
+            from bs4 import BeautifulSoup
             soup = BeautifulSoup(response.text, 'html.parser')
             
             import re
@@ -151,13 +152,13 @@ def fetch_international_news():
                                 "content": s_text[:300],
                                 "source": "AP News"
                             })
-                if len(international_items) >= 4:
+                if len(international_items) >= 2:
                     break
         except Exception as e:
             print(f"AP News Scraping failed: {e}")
 
-    # Final return of exactly 4 items (or however many we got up to 4)
-    return international_items[:4]
+    # Final return of exactly 2 items (or however many we got up to 2)
+    return international_items[:2]
 
 if __name__ == "__main__":
     print("--- Nepal News ---")
